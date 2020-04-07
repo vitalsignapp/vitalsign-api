@@ -60,6 +60,8 @@ func main() {
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	})
 
+	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet)
+
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
 
