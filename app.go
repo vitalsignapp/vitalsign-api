@@ -11,21 +11,21 @@ import (
 	"time"
 
 	"cloud.google.com/go/compute/metadata"
+	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
-	"github.com/vitalsignapp/vitalsign-api/auth"
-	"github.com/vitalsignapp/vitalsign-api/doctor"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
+
+	"github.com/vitalsignapp/vitalsign-api/auth"
+	"github.com/vitalsignapp/vitalsign-api/doctor"
+	"github.com/vitalsignapp/vitalsign-api/patient"
 )
 
 var projectID string
 
 func init() {
-	viper.SetDefault("port", "1323")
-
-	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	initConfig()
 
 	log.SetFlags(0)
 
@@ -39,6 +39,16 @@ func init() {
 }
 
 func main() {
+	var fsClient *firestore.Client
+	var err error
+	{
+		ctx := context.Background()
+		fsClient, err = firestore.NewClient(ctx, projectID)
+		if err != nil {
+			log.Fatalf("Failed to create client: %v", err)
+		}
+	}
+	defer fsClient.Close()
 
 	r := mux.NewRouter()
 	r.Use(mux.CORSMethodMiddleware(r))
@@ -67,6 +77,7 @@ func main() {
 	secure.Use(auth.Authorization)
 
 	secure.HandleFunc("/example", doctor.Example)
+	secure.HandleFunc("/patient/scheduler", patient.NewScheduler(fsClient))
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
@@ -95,4 +106,20 @@ func gracefulshutdown(srv *http.Server) {
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Printf("%s", err.Error())
 	}
+}
+
+func initConfig() {
+	viper.SetDefault("port", "1323")
+
+	viper.SetDefault("firebase.apiKey", "AIzaSyDkfuz9optU8t14BZJBgJ9JNYdH4Omdh6A")
+	viper.SetDefault("firebase.authDomain", "vitalsign-2bc48.firebaseapp.com")
+	viper.SetDefault("firebase.databaseURL", "https://vitalsign-2bc48.firebaseio.com")
+	// viper.SetDefault("firebase.projectId", "vitalsign-2bc48")
+	viper.SetDefault("firebase.storageBucket", "vitalsign-2bc48.appspot.com")
+	viper.SetDefault("firebase.messagingSenderId", "67633726727")
+	viper.SetDefault("firebase.appId", "1:67633726727:web:b535d92a91ec80695bb1a2")
+	viper.SetDefault("firebase.measurementId", "G-MEX9V112SR")
+
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 }
