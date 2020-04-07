@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
+	"google.golang.org/api/option"
 
 	"github.com/vitalsignapp/vitalsign-api/auth"
 	"github.com/vitalsignapp/vitalsign-api/doctor"
@@ -42,8 +43,9 @@ func main() {
 	var fsClient *firestore.Client
 	var err error
 	{
+		opt := option.WithCredentialsFile("vitalsign-2bc48-firebase-adminsdk-l32v0-7ca19e51e6.json")
 		ctx := context.Background()
-		fsClient, err = firestore.NewClient(ctx, projectID)
+		fsClient, err = firestore.NewClient(ctx, projectID, opt)
 		if err != nil {
 			log.Fatalf("Failed to create client: %v", err)
 		}

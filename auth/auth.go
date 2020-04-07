@@ -11,7 +11,7 @@ import (
 func Authen(w http.ResponseWriter, r *http.Request) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
-	tokenString, err := token.SignedString(hmacSecret)
+	tokenString, err := token.SignedString([]byte(hmacSecret))
 	if err != nil {
 		response.InternalServerError(w, err)
 		return
