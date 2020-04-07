@@ -1,0 +1,2 @@
+service: covid19
+runtime: go113
