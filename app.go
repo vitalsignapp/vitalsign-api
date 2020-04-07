@@ -79,7 +79,7 @@ func main() {
 	secure.Use(auth.Authorization)
 
 	secure.HandleFunc("/example", doctor.Example)
-	secure.HandleFunc("/patient/scheduler", patient.NewScheduler(fsClient))
+	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
