@@ -13,6 +13,7 @@ import (
 	"cloud.google.com/go/compute/metadata"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
+	"github.com/vitalsignapp/vitalsign-api/auth"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
 )
@@ -58,6 +59,9 @@ func main() {
 		w.Header().Set("Access-Control-Max-Age", viper.GetString("cors.max_age"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	})
+
+	secure := r.NewRoute().Subrouter()
+	secure.Use(auth.Authorization)
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
