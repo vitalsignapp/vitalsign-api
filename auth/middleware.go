@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/vitalsignapp/vitalsign-api/applog"
+	"github.com/vitalsignapp/vitalsign-api/pkg/applog"
 	"github.com/vitalsignapp/vitalsign-api/response"
 )
 
