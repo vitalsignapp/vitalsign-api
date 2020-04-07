@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"github.com/vitalsignapp/vitalsign-api/auth"
+	"github.com/vitalsignapp/vitalsign-api/doctor"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
 )
@@ -64,6 +65,8 @@ func main() {
 
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
+
+	secure.HandleFunc("/example", doctor.Example)
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
