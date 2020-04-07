@@ -1,4 +1,4 @@
-module gitlab.com/berzebub/vitalsign-api
+module github.com/vitalsignapp/vitalsign-api
 
 go 1.13
 
