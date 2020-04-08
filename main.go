@@ -45,7 +45,7 @@ func main() {
 	var fsClient *firestore.Client
 	var err error
 	{
-		opt := option.WithCredentialsFile("configs/firebase-dev.json")
+		opt := option.WithCredentialsFile("configs/firebase-credentials.json")
 		ctx := context.Background()
 		fsClient, err = firestore.NewClient(ctx, projectID, opt)
 		if err != nil {
