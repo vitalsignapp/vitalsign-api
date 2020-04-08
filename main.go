@@ -83,6 +83,7 @@ func main() {
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 
 	secure.HandleFunc("/api/ward/{hospitalKey}", ward.Rooms(ward.NewRepository(fsClient)))
+	secure.HandleFunc("/api/ward/{patientRoomKey}/patients", patient.Patients(patient.NewRepository(fsClient)))
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
