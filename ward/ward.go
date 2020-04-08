@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Rooms(repo func(context.Context, string) []map[string]interface{}) http.HandlerFunc {
+func Rooms(repo func(context.Context, string) []Ward) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
