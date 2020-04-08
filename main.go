@@ -21,6 +21,7 @@ import (
 	"github.com/vitalsignapp/vitalsign-api/auth"
 	"github.com/vitalsignapp/vitalsign-api/doctor"
 	"github.com/vitalsignapp/vitalsign-api/patient"
+	"github.com/vitalsignapp/vitalsign-api/ward"
 )
 
 var projectID string
@@ -80,6 +81,8 @@ func main() {
 
 	secure.HandleFunc("/example", doctor.Example)
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
+
+	secure.HandleFunc("/api/ward/{hospitalKey}", ward.Rooms(ward.NewRepository(fsClient)))
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
