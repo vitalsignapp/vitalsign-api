@@ -4,4 +4,4 @@ test:
 	go test ./... -v
 
 run:
-	GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT} go run app.go
+	GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT} go run main.go
