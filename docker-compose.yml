@@ -1,0 +1,9 @@
+version: "3.3"
+
+services:
+  api:
+    image: registry.odds.team/vitalsigns/vitalsigns-api:dev
+    ports:
+      - 1323:1323
+    volumes:
+      - ./configs:/app/configs
