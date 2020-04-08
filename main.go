@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -44,7 +45,7 @@ func main() {
 	var fsClient *firestore.Client
 	var err error
 	{
-		opt := option.WithCredentialsFile("vitalsign-2bc48-firebase-adminsdk-l32v0-7ca19e51e6.json")
+		opt := option.WithCredentialsFile("configs/firebase-dev.json")
 		ctx := context.Background()
 		fsClient, err = firestore.NewClient(ctx, projectID, opt)
 		if err != nil {
@@ -75,6 +76,10 @@ func main() {
 	})
 
 	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet)
+
+	r.HandleFunc("/health_check", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	}).Methods(http.MethodGet)
 
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
