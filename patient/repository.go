@@ -63,6 +63,22 @@ func NewRepository(fs *firestore.Client) func(context.Context, string) []Patient
 	}
 }
 
+func GetByID(fs *firestore.Client) func(context.Context, string) *Patient {
+	return func(ctx context.Context, ID string) *Patient {
+		doc, err := fs.Collection("patientData").Doc(ID).Get(ctx)
+		if err != nil {
+			return nil
+		}
+		p := PatientData{}
+		err = doc.DataTo(&p)
+		if err != nil {
+			return nil
+		}
+		pat := toPatient(p, doc.Ref.ID)
+		return &pat
+	}
+}
+
 func toPatient(p PatientData, ID string) Patient {
 	return Patient{
 		ID:             ID,
