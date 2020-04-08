@@ -1,0 +1,7 @@
+Dockerfile
+docker-compose.yml
+Makefile
+README.md
+.git
+.idea
+LICENSE
