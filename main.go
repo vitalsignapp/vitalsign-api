@@ -81,6 +81,10 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 	}).Methods(http.MethodGet)
 
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	}).Methods(http.MethodGet)
+
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
 
