@@ -35,7 +35,7 @@ type PatientData struct {
 	HospitalKey    string `json:"hospitalKey"`
 }
 
-func NewRepository(fs *firestore.Client) func(context.Context, string) []Patient {
+func NewRepoByRoomKey(fs *firestore.Client) func(context.Context, string) []Patient {
 	return func(ctx context.Context, patientRoomKey string) []Patient {
 		iter := fs.Collection("patientData").Where("patientRoomKey", "==", patientRoomKey).Documents(ctx)
 		defer iter.Stop()
@@ -63,7 +63,7 @@ func NewRepository(fs *firestore.Client) func(context.Context, string) []Patient
 	}
 }
 
-func GetByID(fs *firestore.Client) func(context.Context, string) *Patient {
+func NewRepoByID(fs *firestore.Client) func(context.Context, string) *Patient {
 	return func(ctx context.Context, ID string) *Patient {
 		doc, err := fs.Collection("patientData").Doc(ID).Get(ctx)
 		if err != nil {

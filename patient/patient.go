@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Patients(repo func(context.Context, string) []Patient) http.HandlerFunc {
+func ByRoomKeyHandler(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -18,7 +18,7 @@ func Patients(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	}
 }
 
-func PatientByID(repo func(context.Context, string) *Patient) http.HandlerFunc {
+func ByIDHandler(repo func(context.Context, string) *Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
