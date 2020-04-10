@@ -20,4 +20,5 @@ COPY --from=build-env /app/app .
 COPY --from=build-env /app/configs configs/
 RUN mkdir /app/upload
 
+EXPOSE 1323
 ENTRYPOINT ["./app"]
