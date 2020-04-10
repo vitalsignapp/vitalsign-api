@@ -1,12 +1,15 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/vitalsignapp/vitalsign-api/response"
+	"google.golang.org/api/iterator"
 )
 
 type Credential struct {
@@ -42,54 +45,50 @@ func Authen(w http.ResponseWriter, r *http.Request) {
 
 func Login(fs *firestore.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := LoginResponse{
-			ID:               "AjGMr39iDFclLYPJrTGb",
-			DateCreated:      "02/04/2020",
-			Email:            "test1@gmail.com",
-			HospitalKey:      "7yfcpkXkME2OrvbYNAq1",
-			MicrotimeCreated: 1585839201000,
-			Name:             "สมหมาย",
-			Surname:          "ขายฝัน",
-			UserID:           "999",
+		var credential Credential
+		err := json.NewDecoder(r.Body).Decode(&credential)
+		if err != nil {
+			response.BadRequest(w,err)
+			return
 		}
-		json.NewEncoder(w).Encode(&p)
-		// var credential Credential
-		// err := json.NewDecoder(r.Body).Decode(&credential)
-		// if err != nil {
-		// 	response.BadRequest(w,err)
-		// 	return
-		// }
 
-		// ctx := context.Background()
-		// iter := fs.Collection("userData").Where("email", "==", credential.Email).
-		// 	Where("password", "==", credential.Password).
-		// 	Where("hospitalKey", "==", credential.HospitalKey).
-		// 	Documents(ctx)
+		ctx := context.Background()
+		fmt.Println("##### Login: ctx := context.Background()")
+		iter := fs.Collection("userData").Where("email", "==", credential.Email).
+			Where("password", "==", credential.Password).
+			Documents(ctx)
+		fmt.Println("##### Login: fs.Collection")
+		
+		defer iter.Stop()
+		
+		for {
+			fmt.Println("##### Login: for")
+			doc, err := iter.Next()
+			fmt.Println("##### Login: Next")
+			if err == iterator.Done {
+				fmt.Println("##### Login: Done")
+				break
+			}
+			if err != nil {
+				fmt.Println("##### Login: for nil")
+				continue
+			}
+			
+			p := LoginResponse{}
+			err = doc.DataTo(&p)
+			fmt.Println("##### Login: for doc.DataTo(&p)")
+			if err != nil {
+				continue
+			}
+			
+			p.ID = doc.Ref.ID
+			
+			fmt.Println("##### Login: json.NewEncoder(w).Encode(&p)")
+			json.NewEncoder(w).Encode(&p)
+			return
+		}
 
-		// defer iter.Stop()
-
-		// for {
-		// 	doc, err := iter.Next()
-		// 	if err == iterator.Done {
-		// 		break
-		// 	}
-		// 	if err != nil {
-		// 		continue
-		// 	}
-
-		// 	p := LoginResponse{}
-		// 	err = doc.DataTo(&p)
-		// 	if err != nil {
-		// 		continue
-		// 	}
-
-		// 	p.ID = doc.Ref.ID
-
-		// 	json.NewEncoder(w).Encode(&p)
-		// 	return
-		// }
-
-		// response.Unauthorized(w, nil)
-		// return
+		response.Unauthorized(w, nil)
+		return
 	}
 }
