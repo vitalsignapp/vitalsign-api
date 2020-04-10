@@ -48,7 +48,7 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 		var credential Credential
 		err := json.NewDecoder(r.Body).Decode(&credential)
 		if err != nil {
-			response.BadRequest(w,err)
+			response.BadRequest(w, err)
 			return
 		}
 
@@ -58,9 +58,9 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 			Where("password", "==", credential.Password).
 			Documents(ctx)
 		fmt.Println("##### Login: fs.Collection")
-		
+
 		defer iter.Stop()
-		
+
 		for {
 			fmt.Println("##### Login: for")
 			doc, err := iter.Next()
@@ -71,18 +71,20 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 			}
 			if err != nil {
 				fmt.Println("##### Login: for nil")
-				continue
+				response.InternalServerError(w, err)
+				break
 			}
-			
+
 			p := LoginResponse{}
 			err = doc.DataTo(&p)
 			fmt.Println("##### Login: for doc.DataTo(&p)")
 			if err != nil {
-				continue
+				response.InternalServerError(w, err)
+				break
 			}
-			
+
 			p.ID = doc.Ref.ID
-			
+
 			fmt.Println("##### Login: json.NewEncoder(w).Encode(&p)")
 			json.NewEncoder(w).Encode(&p)
 			return
