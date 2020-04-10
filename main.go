@@ -20,7 +20,6 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/vitalsignapp/vitalsign-api/auth"
-	"github.com/vitalsignapp/vitalsign-api/doctor"
 	"github.com/vitalsignapp/vitalsign-api/patient"
 	"github.com/vitalsignapp/vitalsign-api/ward"
 )
@@ -88,7 +87,6 @@ func main() {
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
 
-	secure.HandleFunc("/example", doctor.Example)
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 	secure.HandleFunc("/patient/{patientID}", patient.PatientByID(patient.GetByID(fsClient)))
 
