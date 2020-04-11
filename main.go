@@ -59,7 +59,7 @@ func main() {
 	// all routes required headers
 	r.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// w.Header().Set("Access-Control-Allow-Origin", viper.GetString("cors.allow_origin"))
+			w.Header().Set("Access-Control-Allow-Origin", viper.GetString("cors.allow_origin"))
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.Header().Set("X-XSS-Protection", "1; mode=block")
 			w.Header().Set("X-Frame-Options", "DENY")
@@ -125,15 +125,7 @@ func gracefulshutdown(srv *http.Server) {
 
 func initConfig() {
 	viper.SetDefault("port", "1323")
-
-	viper.SetDefault("firebase.apiKey", "AIzaSyDkfuz9optU8t14BZJBgJ9JNYdH4Omdh6A")
-	viper.SetDefault("firebase.authDomain", "vitalsign-2bc48.firebaseapp.com")
-	viper.SetDefault("firebase.databaseURL", "https://vitalsign-2bc48.firebaseio.com")
-	// viper.SetDefault("firebase.projectId", "vitalsign-2bc48")
-	viper.SetDefault("firebase.storageBucket", "vitalsign-2bc48.appspot.com")
-	viper.SetDefault("firebase.messagingSenderId", "67633726727")
-	viper.SetDefault("firebase.appId", "1:67633726727:web:b535d92a91ec80695bb1a2")
-	viper.SetDefault("firebase.measurementId", "G-MEX9V112SR")
+	viper.SetDefault("cors.allow_origin", "*")
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
