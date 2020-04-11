@@ -6,34 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"cloud.google.com/go/firestore"
 )
-
-type FirestoreClient struct {
-	client *firestore.Client
-}
-
-func mockRepository(context.Context, string) []Ward {
-	mockWards := []Ward{
-		Ward{
-			ID:          "1",
-			Name:        "Test",
-			CreatedDate: 1,
-		},
-		Ward{
-			ID:          "2",
-			Name:        "Test2",
-			CreatedDate: 1,
-		},
-	}
-	return mockWards
-}
-
-func mockEmptyRepository(context.Context, string) []Ward {
-	mockWards := []Ward{}
-	return mockWards
-}
 
 func TestWardByHospitalKey(t *testing.T) {
 	t.Run("it should return httpCode 200 when call /ward/{hospitalKey}", func(t *testing.T) {
@@ -88,4 +61,25 @@ func TestWardByHospitalKey(t *testing.T) {
 			t.Errorf("Length of res isn't 0 but got %d", len(res))
 		}
 	})
+}
+
+func mockRepository(context.Context, string) []Ward {
+	mockWards := []Ward{
+		Ward{
+			ID:          "1",
+			Name:        "Test",
+			CreatedDate: 1,
+		},
+		Ward{
+			ID:          "2",
+			Name:        "Test2",
+			CreatedDate: 1,
+		},
+	}
+	return mockWards
+}
+
+func mockEmptyRepository(context.Context, string) []Ward {
+	mockWards := []Ward{}
+	return mockWards
 }
