@@ -27,3 +27,13 @@ func ByIDHandler(repo func(context.Context, string) *Patient) http.HandlerFunc {
 		json.NewEncoder(w).Encode(&data)
 	}
 }
+
+func ByHospital(repo func(context.Context, string) []Patient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		data := repo(context.Background(), vars["hospitalID"])
+
+		json.NewEncoder(w).Encode(&data)
+	}
+}

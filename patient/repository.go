@@ -79,6 +79,34 @@ func NewRepoByID(fs *firestore.Client) func(context.Context, string) *Patient {
 	}
 }
 
+func NewRepoByHospital(fs *firestore.Client) func(context.Context, string) []Patient {
+	return func(ctx context.Context, hospitalID string) []Patient {
+		iter := fs.Collection("patientData").Where("hospitalKey", "==", hospitalID).Documents(ctx)
+		defer iter.Stop()
+
+		pats := []Patient{}
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				continue
+			}
+
+			p := PatientData{}
+			err = doc.DataTo(&p)
+			if err != nil {
+				continue
+			}
+
+			pats = append(pats, toPatient(p, doc.Ref.ID))
+		}
+
+		return pats
+	}
+}
+
 func toPatient(p PatientData, ID string) Patient {
 	return Patient{
 		ID:             ID,
