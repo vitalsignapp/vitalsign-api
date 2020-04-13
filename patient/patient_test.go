@@ -122,7 +122,7 @@ func mockPatients(context.Context, string) []Patient {
 	mockPatients := []Patient{
 		Patient{
 			ID:             "Patient1",
-			AccountID:      "Mock001",
+			Username:       "Mock001",
 			DateOfAdmit:    "31/01/2020",
 			DateOfBirth:    "14/05/1998",
 			Diagnosis:      "mock diagnosis",
@@ -135,7 +135,7 @@ func mockPatients(context.Context, string) []Patient {
 		},
 		Patient{
 			ID:             "Patient2",
-			AccountID:      "Mock001",
+			Username:       "Mock001",
 			DateOfAdmit:    "15/01/2020",
 			DateOfBirth:    "23/04/1994",
 			Diagnosis:      "mock diagnosis",
@@ -158,7 +158,7 @@ func mockEmptyPatients(context.Context, string) []Patient {
 func mockPatient(context.Context, string) *Patient {
 	return &Patient{
 		ID:             "Patient1",
-		AccountID:      "Mock001",
+		Username:       "Mock001",
 		DateOfAdmit:    "2020/01/01",
 		DateOfBirth:    "1998/05/01",
 		Diagnosis:      "mock diagnosis",

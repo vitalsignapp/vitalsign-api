@@ -9,7 +9,7 @@ import (
 
 type Patient struct {
 	ID             string `json:"id"`
-	AccountID      string `json:"accountId"`
+	Username       string `json:"username"`
 	DateOfAdmit    string `json:"dateOfAdmit"`
 	DateOfBirth    string `json:"dateOfBirth"`
 	Diagnosis      string `json:"diagnosis"`
@@ -22,7 +22,7 @@ type Patient struct {
 }
 
 type PatientData struct {
-	HN             string `json:"HN"`
+	Username       string `json:"username"`
 	DateOfAdmit    string `json:"dateOfAdmit"`
 	DateOfBirth    string `json:"dateOfBirth"`
 	Diagnosis      string `json:"diagnosis"`
@@ -110,7 +110,7 @@ func NewRepoByHospital(fs *firestore.Client) func(context.Context, string) []Pat
 func toPatient(p PatientData, ID string) Patient {
 	return Patient{
 		ID:             ID,
-		AccountID:      p.HN,
+		Username:       p.Username,
 		DateOfAdmit:    p.DateOfAdmit,
 		DateOfBirth:    p.DateOfBirth,
 		Diagnosis:      p.Diagnosis,

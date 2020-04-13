@@ -63,7 +63,7 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 			if err == iterator.Done {
 				break
 			}
-			
+
 			if err != nil {
 				break
 			}
