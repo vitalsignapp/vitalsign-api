@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -79,7 +80,7 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		response.Unauthorized(w, nil)
+		response.Unauthorized(w, errors.New("unauthorized"))
 		return
 	}
 }
