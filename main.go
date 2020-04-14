@@ -74,8 +74,8 @@ func main() {
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	})
 
-	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet)
-	r.HandleFunc("/login", auth.Login(fsClient)).Methods(http.MethodPost)
+	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/login", auth.Login(fsClient)).Methods(http.MethodPost, http.MethodOptions)
 
 	r.HandleFunc("/health_check", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
