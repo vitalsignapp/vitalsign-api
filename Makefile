@@ -1,4 +1,4 @@
-GOOGLE_CLOUD_PROJECT=vitalsigns-426ee
+GOOGLE_CLOUD_PROJECT=vitalsign-2bc48
 
 test:
 	go test ./... -v
