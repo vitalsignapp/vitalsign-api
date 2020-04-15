@@ -19,6 +19,7 @@ import (
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
 	"google.golang.org/api/option"
 
+	"github.com/alexandrevicenzi/go-sse"
 	"github.com/vitalsignapp/vitalsign-api/auth"
 	"github.com/vitalsignapp/vitalsign-api/patient"
 	"github.com/vitalsignapp/vitalsign-api/ward"
@@ -85,8 +86,36 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 	}).Methods(http.MethodGet)
 
+	
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
+	
+	s := sse.NewServer(nil)
+	defer s.Shutdown()
+	r.Handle("/events/{channel}", s)
+	chMsg := make(chan []map[string]interface{})
+	go func() {
+		for {
+			m := <-chMsg
+
+			b, err := json.Marshal(&m)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			for _, v := range s.Channels() {
+				c, ok := s.GetChannel(v)
+				if !ok {
+					continue
+				}
+				c.SendMessage(sse.SimpleMessage(string(b)))
+			}
+
+			// s.SendMessage("/events/channel", sse.SimpleMessage(string(b)))
+		}
+	}()
+	go watching(fsClient, chMsg)
 
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 	secure.HandleFunc("/patient/{patientID}", patient.ByIDHandler(patient.NewRepoByID(fsClient)))
@@ -130,4 +159,22 @@ func initConfig() {
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+}
+
+func watching(fsClient *firestore.Client, chMsg chan []map[string]interface{}) {
+	ctx := context.Background()
+	iter := fsClient.Collection("patientData").Where("hospitalKey", "==", "7yfcpkXkME2OrvbYNAq1").Snapshots(ctx)
+	defer iter.Stop()
+	for {
+		docsnap, err := iter.Next()
+		if err != nil {
+			log.Println("error", err)
+		}
+		docs, _ := docsnap.Documents.GetAll()
+		d := []map[string]interface{}{}
+		for _, doc := range docs {
+			d = append(d, doc.Data())
+		}
+		chMsg <- d
+	}
 }
