@@ -118,9 +118,64 @@ func TestPatientByIDHandler(t *testing.T) {
 	})
 }
 
+func TestPatientLogByIDHandler(t *testing.T) {
+	t.Run("it should return httpCode 200 when call /patient/{patientID}/log", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/patient/Patient1/log", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(LogByIDHandler(mockPatientLogs))
+		handler.ServeHTTP(resp, req)
+
+		if status := resp.Code; status != http.StatusOK {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
+		}
+
+	})
+
+	t.Run("it should return 2 logs when patientID has data", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/patient/Patient1/log", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(LogByIDHandler(mockPatientLogs))
+		handler.ServeHTTP(resp, req)
+
+		var res []PatientLog
+		if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+			t.Fatal(err)
+		}
+
+		if res == nil {
+			t.Errorf("it should has data but got nil")
+		}
+	})
+
+	t.Run("it should return 0 logs when Patient 2 has 0 log", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/patient/Patient2/log", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(LogByIDHandler(mockEmptyPatientLogs))
+		handler.ServeHTTP(resp, req)
+
+		var res []PatientLog
+		if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(res) != 0 {
+			t.Errorf("Length of res isn't 0 but got %d", len(res))
+		}
+	})
+}
+
 func mockPatients(context.Context, string) []Patient {
 	mockPatients := []Patient{
-		Patient{
+		{
 			ID:             "Patient1",
 			Username:       "Mock001",
 			DateOfAdmit:    "31/01/2020",
@@ -133,7 +188,7 @@ func mockPatients(context.Context, string) []Patient {
 			Surname:        "Smith",
 			PatientRoomKey: "MockRoom1",
 		},
-		Patient{
+		{
 			ID:             "Patient2",
 			Username:       "Mock001",
 			DateOfAdmit:    "15/01/2020",
@@ -173,4 +228,61 @@ func mockPatient(context.Context, string) *Patient {
 
 func mockEmptyPatient(context.Context, string) *Patient {
 	return nil
+}
+
+func mockPatientLogs(context.Context, string) []PatientLog {
+	mockPatientLogs := []PatientLog{
+		{
+			BloodPressure:  "120/70",
+			HeartRate:      "99",
+			HospitalKey:    "MockHospitalKey",
+			InputDate:      "10/04/2563",
+			InputRound:     6,
+			Microtime:      1586480268000,
+			OtherSymptoms:  "อยากดื่มกาแฟ",
+			Oxygen:         "96",
+			PatientKey:     "Patient1",
+			PatientRoomKey: "MockPatientRoomKey",
+			SymptomsCheck: []Symptom{
+				{
+					Status: false,
+					Sym:    "ไข้",
+				},
+				{
+					Status: true,
+					Sym:    "ไอ",
+				},
+			},
+			Temperature: "35.0",
+		},
+		{
+			BloodPressure:  "110/60",
+			HeartRate:      "82",
+			HospitalKey:    "MockHospitalKey",
+			InputDate:      "10/04/2563",
+			InputRound:     6,
+			Microtime:      1586480268000,
+			OtherSymptoms:  "อยากดื่มกาแฟเอสเปรสโซ่",
+			Oxygen:         "96",
+			PatientKey:     "Patient1",
+			PatientRoomKey: "MockPatientRoomKey",
+			SymptomsCheck: []Symptom{
+				{
+					Status: false,
+					Sym:    "ไข้",
+				},
+				{
+					Status: true,
+					Sym:    "ไอ",
+				},
+			},
+			Temperature: "36.0",
+		},
+	}
+	return mockPatientLogs
+}
+
+func mockEmptyPatientLogs(context.Context, string) []PatientLog {
+	mockPatientLogs := []PatientLog{}
+	return mockPatientLogs
 }
