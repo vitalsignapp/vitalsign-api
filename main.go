@@ -89,6 +89,7 @@ func main() {
 	secure.Use(auth.Authorization)
 
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
+	secure.HandleFunc("/patient/{patientID}", patient.Update(patient.UpdateRepo(fsClient))).Methods(http.MethodPut)
 	secure.HandleFunc("/patient/{patientID}", patient.ByIDHandler(patient.NewRepoByID(fsClient)))
 	secure.HandleFunc("/patient/hospital/{hospitalID}", patient.ByHospital(patient.NewRepoByHospital(fsClient)))
 

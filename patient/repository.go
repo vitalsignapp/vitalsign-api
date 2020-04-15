@@ -107,6 +107,16 @@ func NewRepoByHospital(fs *firestore.Client) func(context.Context, string) []Pat
 	}
 }
 
+func UpdateRepo(fs *firestore.Client) func(context.Context, string, PatientRequest) error {
+	return func(ctx context.Context, patientID string, pt PatientRequest) error {
+		_, err := fs.Collection("patientData").Doc(patientID).Set(ctx, pt)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func toPatient(p PatientData, ID string) Patient {
 	return Patient{
 		ID:             ID,
