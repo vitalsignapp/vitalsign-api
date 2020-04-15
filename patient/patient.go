@@ -73,3 +73,13 @@ func Update(repo func(context.Context, string, PatientRequest) error) http.Handl
 		json.NewEncoder(w).Encode(http.StatusOK)
 	}
 }
+
+func LogByIDHandler(repo func(context.Context, string) []PatientLog) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		data := repo(context.Background(), vars["patientID"])
+
+		json.NewEncoder(w).Encode(&data)
+	}
+}

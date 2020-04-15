@@ -34,6 +34,25 @@ type PatientData struct {
 	PatientRoomKey string `json:"patientRoomKey"`
 	HospitalKey    string `json:"hospitalKey"`
 }
+type Symptom struct {
+	Status bool   `json:"status"`
+	Sym    string `json:"sym"`
+}
+
+type PatientLog struct {
+	BloodPressure  string    `json:"bloodPressure"`
+	HeartRate      string    `json:"heartRate"`
+	HospitalKey    string    `json:"hospitalKey"`
+	InputDate      string    `json:"inputDate"`
+	InputRound     int       `json:"inputRound"`
+	Microtime      int64     `json:"microtime"`
+	OtherSymptoms  string    `json:"otherSymptoms"`
+	Oxygen         string    `json:"oxygen"`
+	PatientKey     string    `json:"patientKey"`
+	PatientRoomKey string    `json:"patientRoomKey"`
+	SymptomsCheck  []Symptom `json:"symptomsCheck"`
+	Temperature    string    `json:"temperature"`
+}
 
 func NewRepoByRoomKey(fs *firestore.Client) func(context.Context, string) []Patient {
 	return func(ctx context.Context, patientRoomKey string) []Patient {
@@ -114,6 +133,36 @@ func UpdateRepo(fs *firestore.Client) func(context.Context, string, PatientReque
 			return err
 		}
 		return nil
+	}
+}
+
+func NewRepoLogByID(fs *firestore.Client) func(context.Context, string) []PatientLog {
+	return func(ctx context.Context, patientID string) []PatientLog {
+		iter := fs.Collection("patientLog").
+			Where("patientKey", "==", patientID).
+			Documents(ctx)
+		defer iter.Stop()
+
+		pats := []PatientLog{}
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				continue
+			}
+
+			p := PatientLog{}
+			err = doc.DataTo(&p)
+			if err != nil {
+				continue
+			}
+
+			pats = append(pats, p)
+		}
+
+		return pats
 	}
 }
 
