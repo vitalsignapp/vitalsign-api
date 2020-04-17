@@ -13,13 +13,13 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/firestore"
+	"github.com/alexandrevicenzi/go-sse"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
 	"google.golang.org/api/option"
 
-	"github.com/alexandrevicenzi/go-sse"
 	"github.com/vitalsignapp/vitalsign-api/auth"
 	"github.com/vitalsignapp/vitalsign-api/patient"
 	"github.com/vitalsignapp/vitalsign-api/ward"
@@ -44,9 +44,10 @@ func init() {
 func main() {
 	var fsClient *firestore.Client
 	var err error
+	var ctx context.Context
 	{
 		opt := option.WithCredentialsFile("configs/firebase-credentials.json")
-		ctx := context.Background()
+		ctx = context.Background()
 		fsClient, err = firestore.NewClient(ctx, projectID, opt)
 		if err != nil {
 			log.Fatalf("Failed to create client: %v", err)
@@ -89,33 +90,6 @@ func main() {
 	
 	secure := r.NewRoute().Subrouter()
 	secure.Use(auth.Authorization)
-	
-	s := sse.NewServer(nil)
-	defer s.Shutdown()
-	r.Handle("/events/{channel}", s)
-	chMsg := make(chan []map[string]interface{})
-	go func() {
-		for {
-			m := <-chMsg
-
-			b, err := json.Marshal(&m)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-
-			for _, v := range s.Channels() {
-				c, ok := s.GetChannel(v)
-				if !ok {
-					continue
-				}
-				c.SendMessage(sse.SimpleMessage(string(b)))
-			}
-
-			// s.SendMessage("/events/channel", sse.SimpleMessage(string(b)))
-		}
-	}()
-	go watching(fsClient, chMsg)
 
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 	secure.HandleFunc("/patient/{patientID}", patient.ByIDHandler(patient.NewRepoByID(fsClient)))
@@ -123,6 +97,12 @@ func main() {
 
 	secure.HandleFunc("/ward/{hospitalKey}", ward.Rooms(ward.NewRepository(fsClient)))
 	secure.HandleFunc("/ward/{patientRoomKey}/patients", patient.ByRoomKeyHandler(patient.NewRepoByRoomKey(fsClient)))
+
+
+	s := sse.NewServer(nil)
+	defer s.Shutdown()
+	r.Handle("/events/patient/{channel}", s)
+	go watchingPatientData(context.Background(), fsClient, s)
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
@@ -138,7 +118,6 @@ func main() {
 		log.Printf("serve on %s\n", ":"+viper.GetString("port"))
 		log.Printf("%s", srv.ListenAndServe())
 	}()
-
 	gracefulshutdown(srv)
 }
 
@@ -161,9 +140,8 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 }
 
-func watching(fsClient *firestore.Client, chMsg chan []map[string]interface{}) {
-	ctx := context.Background()
-	iter := fsClient.Collection("patientData").Where("hospitalKey", "==", "7yfcpkXkME2OrvbYNAq1").Snapshots(ctx)
+func watchingPatientData(ctx context.Context, fsClient *firestore.Client, s *sse.Server) {
+	iter := fsClient.Collection("patientData").Snapshots(ctx)
 	defer iter.Stop()
 	for {
 		docsnap, err := iter.Next()
@@ -171,10 +149,34 @@ func watching(fsClient *firestore.Client, chMsg chan []map[string]interface{}) {
 			log.Println("error", err)
 		}
 		docs, _ := docsnap.Documents.GetAll()
-		d := []map[string]interface{}{}
+		patients := []patient.PatientData{}
 		for _, doc := range docs {
-			d = append(d, doc.Data())
+			patient := patient.PatientData{}
+			_ = doc.DataTo(&patient)
+			patients = append(patients, patient)
 		}
-		chMsg <- d
+
+		// get all connection clients 
+		clients := s.Channels()
+		for _, c := range clients {
+			channelName := strings.ReplaceAll(c, "/events/patient/", "")
+
+			patientsByHospital := []patient.PatientData{}
+			for _, patient := range patients {
+				if channelName == patient.HospitalKey {
+					patientsByHospital = append(patientsByHospital, patient)
+				}
+			}
+
+			if len(patientsByHospital) > 0 {
+				payload, err := json.Marshal(&patientsByHospital)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				s.SendMessage(c, sse.SimpleMessage(string(payload)))
+			}
+		}
 	}
 }
