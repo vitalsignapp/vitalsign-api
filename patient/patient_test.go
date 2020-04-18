@@ -233,6 +233,7 @@ func mockEmptyPatient(context.Context, string) *Patient {
 func mockPatientLogs(context.Context, string) []PatientLog {
 	mockPatientLogs := []PatientLog{
 		{
+			ID:             "mockId1",
 			BloodPressure:  "120/70",
 			HeartRate:      "99",
 			HospitalKey:    "MockHospitalKey",
@@ -256,6 +257,7 @@ func mockPatientLogs(context.Context, string) []PatientLog {
 			Temperature: "35.0",
 		},
 		{
+			ID:             "mockId2",
 			BloodPressure:  "110/60",
 			HeartRate:      "82",
 			HospitalKey:    "MockHospitalKey",

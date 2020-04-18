@@ -40,6 +40,7 @@ type Symptom struct {
 }
 
 type PatientLog struct {
+	ID             string    `json:"id"`
 	BloodPressure  string    `json:"bloodPressure"`
 	HeartRate      string    `json:"heartRate"`
 	HospitalKey    string    `json:"hospitalKey"`
@@ -154,6 +155,7 @@ func NewRepoLogByID(fs *firestore.Client) func(context.Context, string) []Patien
 			}
 
 			p := PatientLog{}
+			p.ID = doc.Ref.ID
 			err = doc.DataTo(&p)
 			if err != nil {
 				continue
