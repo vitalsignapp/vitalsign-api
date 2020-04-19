@@ -21,6 +21,7 @@ import (
 
 	"github.com/vitalsignapp/vitalsign-api/auth"
 	"github.com/vitalsignapp/vitalsign-api/patient"
+	"github.com/vitalsignapp/vitalsign-api/sse"
 	"github.com/vitalsignapp/vitalsign-api/ward"
 )
 
@@ -53,6 +54,14 @@ func main() {
 	}
 	defer fsClient.Close()
 
+	broker := sse.NewServer()
+
+	// new router for support SSE
+	rs := mux.NewRouter()
+	rs.Use(mux.CORSMethodMiddleware(rs))
+	rs.HandleFunc("/listen/{uuID}", broker.Hub())
+
+	// new router for support HTTP server
 	r := mux.NewRouter()
 	r.Use(mux.CORSMethodMiddleware(r))
 
@@ -73,6 +82,11 @@ func main() {
 		w.Header().Set("Access-Control-Max-Age", viper.GetString("cors.max_age"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	})
+
+	// this handler, it example for test push message to SSE
+	// please remove when you implement the real one.
+	r.HandleFunc("/says", broker.SayAll())
+	r.HandleFunc("/say/{uuID}", broker.SayByUUID())
 
 	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet, http.MethodOptions)
 	r.HandleFunc("/login", auth.Login(fsClient)).Methods(http.MethodPost, http.MethodOptions)
@@ -108,9 +122,25 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
+	// new HTTP Server for SSE. it require the WriteTimeout/ReadTimeout more than normal HTTP Server
+	srvsse := &http.Server{
+		Handler: &ochttp.Handler{
+			Handler:     rs,
+			Propagation: &b3.HTTPFormat{},
+		},
+		Addr:         "0.0.0.0:" + viper.GetString("sse.port"),
+		WriteTimeout: 1200 * time.Second,
+		ReadTimeout:  1200 * time.Second,
+	}
+
 	go func() {
-		log.Printf("serve on %s\n", ":"+viper.GetString("port"))
+		log.Printf("HTTP server serve on %s\n", ":"+viper.GetString("port"))
 		log.Printf("%s", srv.ListenAndServe())
+	}()
+
+	go func() {
+		log.Printf("SSE server serve on %s\n", ":"+viper.GetString("sse.port"))
+		log.Printf("%s", srvsse.ListenAndServe())
 	}()
 
 	gracefulshutdown(srv)
@@ -129,6 +159,8 @@ func gracefulshutdown(srv *http.Server) {
 
 func initConfig() {
 	viper.SetDefault("port", "1323")
+	viper.SetDefault("sse.port", "1324")
+
 	viper.SetDefault("cors.allow_origin", "*")
 
 	viper.AutomaticEnv()
