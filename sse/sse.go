@@ -142,8 +142,9 @@ func (broker *Broker) listen() {
 				fmt.Println("Boardcast by hospital")
 			case BroadcastByUUID:
 				fmt.Println("Boardcast by UUID")
-				clientMessageChan := broker.clients[string(event.UUID)]
-				clientMessageChan <- event.Payload
+				if clientMessageChan, ok := broker.clients[string(event.UUID)]; ok {
+					clientMessageChan <- event.Payload
+				}
 			default:
 				fmt.Println("Boardcast to all registered client")
 				// We got a new event from the outside!
