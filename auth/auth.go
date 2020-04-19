@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/dgrijalva/jwt-go"
@@ -43,6 +44,19 @@ func Authen(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func GenerateToken(payload map[string]interface{}, expireAt time.Time) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["iss"] = "vitalsign"
+	claims["exp"] = expireAt.Unix()
+
+	for k, v := range payload {
+		claims[k] = v
+	}
+
+	return token.SignedString([]byte(hmacSecret))
+}
+
 func Login(fs *firestore.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var credential Credential
@@ -56,9 +70,9 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 		iter := fs.Collection("userData").Where("email", "==", credential.Email).
 			Where("password", "==", credential.Password).
 			Documents(ctx)
-
 		defer iter.Stop()
 
+		p := LoginResponse{}
 		for {
 			doc, err := iter.Next()
 			if err == iterator.Done {
@@ -69,18 +83,33 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 				break
 			}
 
-			p := LoginResponse{}
 			p.ID = doc.Ref.ID
 			err = doc.DataTo(&p)
 			if err != nil {
 				break
 			}
+		}
 
-			json.NewEncoder(w).Encode(&p)
+		if p.ID == "" {
+			response.Unauthorized(w, errors.New("unauthorized"))
 			return
 		}
 
-		response.Unauthorized(w, errors.New("unauthorized"))
+		//Public Claims
+		payload := map[string]interface{}{
+			"email": credential.Email,
+		}
+
+		token, err := GenerateToken(payload, time.Now().Add(time.Hour*8))
+		if err != nil {
+			response.InternalServerError(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"data":  p,
+			"token": token,
+		})
 		return
 	}
 }
