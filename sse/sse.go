@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -161,15 +160,6 @@ func (broker *Broker) listen() {
 	}
 }
 
-func formatSSE(event NotificationType, data string) []byte {
-	eventPayload := "event: " + event.String() + "\n"
-	dataLines := strings.Split(data, "\n")
-	for _, line := range dataLines {
-		eventPayload = eventPayload + "data: " + line + "\n"
-	}
-	return []byte(eventPayload + "\n")
-}
-
 // SayAll is example function for broadcast to all registered clients
 func (broker *Broker) SayAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +168,7 @@ func (broker *Broker) SayAll() http.HandlerFunc {
 			"name":    "exampleName",
 			"message": "exampleMessage"})
 
-		broker.Notifier <- Notification{Type: BroadcastAll, Payload: []byte(formatSSE(BroadcastAll, string(jsonStructure)))}
+		broker.Notifier <- Notification{Type: BroadcastAll, Payload: []byte(string(jsonStructure))}
 
 		w.Write([]byte("ok."))
 	}
@@ -193,7 +183,7 @@ func (broker *Broker) SayByUUID() http.HandlerFunc {
 			"name":    "exampleNameByUUID",
 			"message": "exampleMessageByUUID"})
 
-		broker.Notifier <- Notification{UUID: []byte(vars["uuID"]), Type: BroadcastByUUID, Payload: []byte(formatSSE(BroadcastByUUID, string(jsonStructure)))}
+		broker.Notifier <- Notification{UUID: []byte(vars["uuID"]), Type: BroadcastByUUID, Payload: []byte(string(jsonStructure))}
 
 		w.Write([]byte("ok."))
 	}
