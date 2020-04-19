@@ -76,6 +76,7 @@ func main() {
 
 	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet, http.MethodOptions)
 	r.HandleFunc("/login", auth.Login(fsClient)).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/logout", auth.Logout()).Methods(http.MethodGet, http.MethodOptions)
 
 	r.HandleFunc("/health_check", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
