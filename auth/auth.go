@@ -116,12 +116,11 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 
 func Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-			cookie := &http.Cookie{
-				Name:  "accessToken",
-				Value: "",
-				Path:  "/",
-			}
-			http.SetCookie(w, cookie)
-		return
+		cookie := &http.Cookie{
+			Name:  "accessToken",
+			Value: "",
+			Path:  "/",
+		}
+		http.SetCookie(w, cookie)
 	}
 }
