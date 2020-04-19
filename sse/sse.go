@@ -23,10 +23,13 @@ type Client struct {
 
 type NotificationType string
 
+// Try to change Notification Type by action event instead of by boardcast
+// Example: CreatedRoom
 const (
 	BroadcastAll        NotificationType = "BroadcastAll"
 	BroadcastByHospital NotificationType = "BroadcastByHospital"
 	BroadcastByUUID     NotificationType = "BroadcastByUUID"
+	CreatedRoom         NotificationType = "CreatedRoom"
 )
 
 func (n NotificationType) String() string {
@@ -138,6 +141,8 @@ func (broker *Broker) listen() {
 		case event := <-broker.Notifier:
 
 			switch notificationType := event.Type; notificationType {
+			case CreatedRoom:
+				fmt.Println("Created Room shoud boardcast to all client by hospital")
 			case BroadcastByHospital:
 				fmt.Println("Boardcast by hospital")
 			case BroadcastByUUID:
