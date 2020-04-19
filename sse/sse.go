@@ -1,9 +1,11 @@
 package sse
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -20,10 +22,28 @@ type Client struct {
 	ChannelID chan []byte
 }
 
+type NotificationType string
+
+const (
+	BroadcastAll        NotificationType = "BroadcastAll"
+	BroadcastByHospital NotificationType = "BroadcastByHospital"
+	BroadcastByUUID     NotificationType = "BroadcastByUUID"
+)
+
+func (n NotificationType) String() string {
+	return string(n)
+}
+
+type Notification struct {
+	UUID    uuID
+	Type    NotificationType
+	Payload []byte
+}
+
 type Broker struct {
 
 	// Events are pushed to this channel by the main events-gathering routine
-	Notifier chan []byte
+	Notifier chan Notification
 
 	// New client connections
 	newClients chan Client
@@ -32,16 +52,16 @@ type Broker struct {
 	closingClients chan Client
 
 	// Client connections registry
-	clients map[chan []byte][]byte
+	clients map[string]chan []byte
 }
 
 func NewServer() (broker *Broker) {
 	// Instantiate a broker
 	broker = &Broker{
-		Notifier:       make(chan []byte, 1),
+		Notifier:       make(chan Notification, 1),
 		newClients:     make(chan Client),
 		closingClients: make(chan Client),
-		clients:        make(map[chan []byte][]byte),
+		clients:        make(map[string]chan []byte),
 	}
 
 	// Set it running - listening and broadcasting events
@@ -108,26 +128,73 @@ func (broker *Broker) listen() {
 
 			// A new client has connected.
 			// Register their message channel
-			broker.clients[s.ChannelID] = s.UUID
+			broker.clients[string(s.UUID)] = s.ChannelID
 			log.Printf("Client added. %d registered clients", len(broker.clients))
 		case s := <-broker.closingClients:
 
 			// A client has dettached and we want to
 			// stop sending them messages.
-			delete(broker.clients, s.ChannelID)
+			delete(broker.clients, string(s.UUID))
 			log.Printf("Removed client. %d registered clients", len(broker.clients))
 		case event := <-broker.Notifier:
 
-			// We got a new event from the outside!
-			// Send event to all connected clients
-			for clientMessageChan := range broker.clients {
-				select {
-				case clientMessageChan <- event:
-				case <-time.After(patience):
-					log.Print("Skipping client.")
+			switch notificationType := event.Type; notificationType {
+			case BroadcastByHospital:
+				fmt.Println("Boardcast by hospital")
+			case BroadcastByUUID:
+				fmt.Println("Boardcast by UUID")
+				clientMessageChan := broker.clients[string(event.UUID)]
+				clientMessageChan <- event.Payload
+			default:
+				fmt.Println("Boardcast to all registered client")
+				// We got a new event from the outside!
+				// Send event to all connected clients
+				for _, clientMessageChan := range broker.clients {
+					select {
+					case clientMessageChan <- event.Payload:
+					case <-time.After(patience):
+						log.Print("Skipping client.")
+					}
 				}
 			}
 		}
 	}
+}
 
+func formatSSE(event NotificationType, data string) []byte {
+	eventPayload := "event: " + event.String() + "\n"
+	dataLines := strings.Split(data, "\n")
+	for _, line := range dataLines {
+		eventPayload = eventPayload + "data: " + line + "\n"
+	}
+	return []byte(eventPayload + "\n")
+}
+
+// SayAll is example function for broadcast to all registered clients
+func (broker *Broker) SayAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		jsonStructure, _ := json.Marshal(map[string]string{
+			"name":    "exampleName",
+			"message": "exampleMessage"})
+
+		broker.Notifier <- Notification{Type: BroadcastAll, Payload: []byte(formatSSE(BroadcastAll, string(jsonStructure)))}
+
+		w.Write([]byte("ok."))
+	}
+}
+
+// SayByUUID is example function for broadcast by specific UUID registered clients
+func (broker *Broker) SayByUUID() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		jsonStructure, _ := json.Marshal(map[string]string{
+			"name":    "exampleNameByUUID",
+			"message": "exampleMessageByUUID"})
+
+		broker.Notifier <- Notification{UUID: []byte(vars["uuID"]), Type: BroadcastByUUID, Payload: []byte(formatSSE(BroadcastByUUID, string(jsonStructure)))}
+
+		w.Write([]byte("ok."))
+	}
 }
