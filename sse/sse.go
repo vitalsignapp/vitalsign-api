@@ -17,8 +17,8 @@ const patience time.Duration = time.Second * 1
 type uuID []byte
 
 type Client struct {
-	UUID      uuID
-	ChannelID chan []byte
+	UUID           uuID
+	ChannelPayload chan []byte
 }
 
 type NotificationType string
@@ -111,7 +111,7 @@ func (broker *Broker) Hub() http.HandlerFunc {
 
 				// Write to the ResponseWriter
 				// Server Sent Events compatible
-				fmt.Fprintf(w, "data: %s\n\n", <-messageChan.ChannelID)
+				fmt.Fprintf(w, "data: %s\n\n", <-messageChan.ChannelPayload)
 
 				// Flush the data immediatly instead of buffering it for later.
 				flusher.Flush()
@@ -127,7 +127,7 @@ func (broker *Broker) listen() {
 
 			// A new client has connected.
 			// Register their message channel
-			broker.clients[string(s.UUID)] = s.ChannelID
+			broker.clients[string(s.UUID)] = s.ChannelPayload
 			log.Printf("Client added. %d registered clients", len(broker.clients))
 		case s := <-broker.closingClients:
 
