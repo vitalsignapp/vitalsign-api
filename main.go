@@ -22,6 +22,7 @@ import (
 	"github.com/vitalsignapp/vitalsign-api/auth"
 	"github.com/vitalsignapp/vitalsign-api/patient"
 	"github.com/vitalsignapp/vitalsign-api/sse"
+	"github.com/vitalsignapp/vitalsign-api/user"
 	"github.com/vitalsignapp/vitalsign-api/ward"
 )
 
@@ -73,6 +74,7 @@ func main() {
 			w.Header().Set("X-XSS-Protection", "1; mode=block")
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("Strict-Transport-Security", "max-age=604800; includeSubDomains; preload")
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,HEAD")
 			handler.ServeHTTP(w, r)
 		})
 	})
@@ -111,6 +113,8 @@ func main() {
 
 	secure.HandleFunc("/ward/{hospitalKey}", ward.Rooms(ward.NewRepository(fsClient)))
 	secure.HandleFunc("/ward/{patientRoomKey}/patients", patient.ByRoomKeyHandler(patient.NewRepoByRoomKey(fsClient)))
+
+	secure.HandleFunc("/userData/reset/{userID}", user.ChangePassword(user.NewChangePassword(fsClient))).Methods(http.MethodPut, http.MethodOptions)
 
 	srv := &http.Server{
 		Handler: &ochttp.Handler{
