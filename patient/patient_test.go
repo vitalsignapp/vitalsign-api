@@ -174,13 +174,13 @@ func TestPatientLogByIDHandler(t *testing.T) {
 }
 
 func TestPatientsByHospital(t *testing.T) {
-	t.Run("it should return httpCode 200 when call /ward/{patientRoomKey}/patients", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodGet, "/patient/hospital/{hospitalID}", nil)
+	t.Run("it should return httpCode 200 when call /patient/hospital/{HospitalID}", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/patient/hospital/mockHospitalID1", nil)
 		if err != nil {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(ByRoomKeyHandler(mockPatients))
+		handler := http.HandlerFunc(ByHospital(mockPatients))
 		handler.ServeHTTP(resp, req)
 
 		if status := resp.Code; status != http.StatusOK {
@@ -189,13 +189,13 @@ func TestPatientsByHospital(t *testing.T) {
 
 	})
 
-	t.Run("it should return 2 patients when ward 1 has 2 patients", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodGet, "/ward/MockRoom1/patients", nil)
+	t.Run("it should return 4 patients when this hospital has 4 patients", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/patient/hospital/mockHospitalID1", nil)
 		if err != nil {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(ByRoomKeyHandler(mockPatients))
+		handler := http.HandlerFunc(ByHospital(mockPatients))
 		handler.ServeHTTP(resp, req)
 
 		var res []Patient
@@ -204,17 +204,17 @@ func TestPatientsByHospital(t *testing.T) {
 		}
 
 		if len(res) != 2 {
-			t.Errorf("Length of res isn't 2 but got %d", len(res))
+			t.Errorf("Length of res isn't 4 but got %d", len(res))
 		}
 	})
 
-	t.Run("it should return 0 patients when ward 2 has 0 patients", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodGet, "/ward/MockRoom2/patients", nil)
+	t.Run("it should return 0 patients when this hospital has 0 patients", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/patient/hospital/mockHospitalID2", nil)
 		if err != nil {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(ByRoomKeyHandler(mockEmptyPatients))
+		handler := http.HandlerFunc(ByHospital(mockEmptyPatientsByHospital))
 		handler.ServeHTTP(resp, req)
 
 		var res []Patient
