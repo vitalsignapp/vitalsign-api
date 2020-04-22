@@ -67,8 +67,10 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 		}
 
 		ctx := context.Background()
-		iter := fs.Collection("userData").Where("email", "==", credential.Email).
+		iter := fs.Collection("userData").
+			Where("email", "==", credential.Email).
 			Where("password", "==", credential.Password).
+			Where("hospitalKey", "==", credential.HospitalKey).
 			Documents(ctx)
 		defer iter.Stop()
 
@@ -97,7 +99,8 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 
 		//Public Claims
 		payload := map[string]interface{}{
-			"email": credential.Email,
+			"email":      credential.Email,
+			"hospitalKey": credential.HospitalKey,
 		}
 
 		token, err := GenerateToken(payload, time.Now().Add(time.Hour*8))
@@ -106,6 +109,12 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 			return
 		}
 
+		cookie := &http.Cookie{
+			Name:  "access-token",
+			Value: token,
+			Path:  "/",
+		}
+		http.SetCookie(w, cookie)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"data":  p,
 			"token": token,
@@ -117,7 +126,7 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 func Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie := &http.Cookie{
-			Name:  "accessToken",
+			Name:  "access-token",
 			Value: "",
 			Path:  "/",
 		}
