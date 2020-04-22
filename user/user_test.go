@@ -51,7 +51,6 @@ func TestChangePassword(t *testing.T) {
 		}
 	})
 
-
 	t.Run("it should throw error when password and confirm password does not match", func(t *testing.T) {
 		body := `{
 			"password": "1212111",
@@ -71,7 +70,6 @@ func TestChangePassword(t *testing.T) {
 			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
 		}
 	})
-
 
 	t.Run("it should bad request when body is empty", func(t *testing.T) {
 		body := ``
