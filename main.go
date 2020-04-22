@@ -91,7 +91,7 @@ func main() {
 	r.HandleFunc("/say/{uuID}", broker.SayByUUID())
 
 	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet, http.MethodOptions)
-	r.HandleFunc("/login", auth.Login(fsClient)).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/login", auth.Login(auth.CheckAuthen(fsClient))).Methods(http.MethodPost, http.MethodOptions)
 	r.HandleFunc("/logout", auth.Logout()).Methods(http.MethodGet, http.MethodOptions)
 
 	r.HandleFunc("/health_check", func(w http.ResponseWriter, r *http.Request) {

@@ -7,10 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/vitalsignapp/vitalsign-api/response"
-	"google.golang.org/api/iterator"
 )
 
 type Credential struct {
@@ -57,7 +55,7 @@ func GenerateToken(payload map[string]interface{}, expireAt time.Time) (string, 
 	return token.SignedString([]byte(hmacSecret))
 }
 
-func Login(fs *firestore.Client) http.HandlerFunc {
+func Login(repo func(context.Context, string, string, string) *LoginResponse) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var credential Credential
 		err := json.NewDecoder(r.Body).Decode(&credential)
@@ -66,41 +64,16 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.Background()
-		iter := fs.Collection("userData").
-			Where("email", "==", credential.Email).
-			Where("password", "==", credential.Password).
-			Where("hospitalKey", "==", credential.HospitalKey).
-			Documents(ctx)
-		defer iter.Stop()
-
-		p := LoginResponse{}
-		for {
-			doc, err := iter.Next()
-			if err == iterator.Done {
-				break
-			}
-
-			if err != nil {
-				break
-			}
-
-			p.ID = doc.Ref.ID
-			err = doc.DataTo(&p)
-			if err != nil {
-				break
-			}
-		}
-
-		if p.ID == "" {
+		user := repo(context.Background(), credential.Email, credential.Password, credential.HospitalKey)
+		if user == nil || user.ID == "" {
 			response.Unauthorized(w, errors.New("unauthorized"))
 			return
 		}
 
 		//Public Claims
 		payload := map[string]interface{}{
-			"email":      credential.Email,
-			"hospitalKey": credential.HospitalKey,
+			"email":       user.Email,
+			"hospitalKey": user.HospitalKey,
 		}
 
 		token, err := GenerateToken(payload, time.Now().Add(time.Hour*8))
@@ -116,7 +89,7 @@ func Login(fs *firestore.Client) http.HandlerFunc {
 		}
 		http.SetCookie(w, cookie)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"data":  p,
+			"data":  user,
 			"token": token,
 		})
 		return
