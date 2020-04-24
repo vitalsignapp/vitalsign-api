@@ -54,3 +54,23 @@ func NewRepository(fs *firestore.Client) func(context.Context, string) []Ward {
 		return wards
 	}
 }
+
+func AddNewRepository(fs *firestore.Client) func(context.Context, RoomRequest) error {
+	return func(ctx context.Context, r RoomRequest) error {
+
+		_, _, err := fs.Collection("patientRoom").Add(ctx, map[string]interface{}{
+			"name":        r.Name,
+			"hospitalKey": r.HospitalKey,
+			"addTime":     r.AddTime,
+			"date": map[string]interface{}{
+				"date":      r.Date.Date,
+				"microtime": r.Date.Microtime,
+				"week":      r.Date.Week,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}

@@ -111,6 +111,7 @@ func main() {
 	secure.HandleFunc("/patient/hospital/{hospitalID}", patient.ByHospital(patient.NewRepoByHospital(fsClient)))
 	secure.HandleFunc("/patient/{patientID}/log", patient.LogByIDHandler(patient.NewRepoLogByID(fsClient)))
 
+	secure.HandleFunc("/ward", ward.NewRoom(ward.AddNewRepository(fsClient))).Methods(http.MethodPost)
 	secure.HandleFunc("/ward/{hospitalKey}", ward.Rooms(ward.NewRepository(fsClient)))
 	secure.HandleFunc("/ward/{patientRoomKey}/patients", patient.ByRoomKeyHandler(patient.NewRepoByRoomKey(fsClient)))
 
