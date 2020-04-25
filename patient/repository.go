@@ -60,6 +60,7 @@ type PatientLog struct {
 	Temperature    string    `json:"temperature"`
 }
 
+// NewRepoByRoomKey get patient data in room by room key
 func NewRepoByRoomKey(fs *firestore.Client) func(context.Context, string) []Patient {
 	return func(ctx context.Context, patientRoomKey string) []Patient {
 		iter := fs.Collection("patientData").Where("patientRoomKey", "==", patientRoomKey).Documents(ctx)
@@ -88,6 +89,7 @@ func NewRepoByRoomKey(fs *firestore.Client) func(context.Context, string) []Pati
 	}
 }
 
+// NewRepoByID get patient data by patient id
 func NewRepoByID(fs *firestore.Client) func(context.Context, string) *Patient {
 	return func(ctx context.Context, ID string) *Patient {
 		doc, err := fs.Collection("patientData").Doc(ID).Get(ctx)
@@ -104,6 +106,7 @@ func NewRepoByID(fs *firestore.Client) func(context.Context, string) *Patient {
 	}
 }
 
+// NewRepoByHospital retreive all patient data by hospital id
 func NewRepoByHospital(fs *firestore.Client) func(context.Context, string) []Patient {
 	return func(ctx context.Context, hospitalID string) []Patient {
 		iter := fs.Collection("patientData").Where("hospitalKey", "==", hospitalID).Documents(ctx)
@@ -132,6 +135,7 @@ func NewRepoByHospital(fs *firestore.Client) func(context.Context, string) []Pat
 	}
 }
 
+// UpdateRepo update patient data by patient id
 func UpdateRepo(fs *firestore.Client) func(context.Context, string, PatientRequest) error {
 	return func(ctx context.Context, patientID string, pt PatientRequest) error {
 		_, err := fs.Collection("patientData").Doc(patientID).Set(ctx, pt)
@@ -142,6 +146,7 @@ func UpdateRepo(fs *firestore.Client) func(context.Context, string, PatientReque
 	}
 }
 
+// NewRepoLogByID query patient log by patient id
 func NewRepoLogByID(fs *firestore.Client) func(context.Context, string) []PatientLog {
 	return func(ctx context.Context, patientID string) []PatientLog {
 		iter := fs.Collection("patientLog").
@@ -219,6 +224,17 @@ func AddNewRepository(fs *firestore.Client) func(context.Context, PatientRequest
 			"surname":        p.Surname,
 			"username":       p.Username,
 		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+// NewRepoDeleteByID NewRepoDeleteByID
+func NewRepoDeleteByID(fs *firestore.Client) func(context.Context, string) error {
+	return func(ctx context.Context, patientID string) error {
+		_, err := fs.Collection("patientData").Doc(patientID).Delete(ctx)
 		if err != nil {
 			return err
 		}

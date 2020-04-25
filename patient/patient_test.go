@@ -375,6 +375,41 @@ func TestAddNewPatient(t *testing.T) {
 	})
 }
 
+func TestDeletePatient(t *testing.T) {
+	t.Run("should return status 200 when call DELETE /patient", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, "/patient", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(DeleteByIDHandler(mockDeleteSuccess))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusOK {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
+		}
+	});
+	
+	t.Run("should return status 400 when call DELETE /patient", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, "/patient", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(DeleteByIDHandler(mockDeleteError))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+}
+func mockDeleteSuccess(context.Context, string) error {
+	return nil
+}
+
+func mockDeleteError(context.Context, string) error {
+	return errors.New("Some error")
+}
+
 func mockParseTokenError(w http.ResponseWriter, r *http.Request) (auth.TokenParseValue, error) {
 	return auth.TokenParseValue{}, errors.New("Error")
 }

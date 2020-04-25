@@ -31,6 +31,7 @@ type PatientStatusRequest struct {
 	IsNotify *bool `json:"isNotify"`
 }
 
+// ByRoomKeyHandler is handler for get patient by room id
 func ByRoomKeyHandler(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -41,6 +42,7 @@ func ByRoomKeyHandler(repo func(context.Context, string) []Patient) http.Handler
 	}
 }
 
+// ByIDHandler is handler for get patient by id
 func ByIDHandler(repo func(context.Context, string) *Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -51,6 +53,22 @@ func ByIDHandler(repo func(context.Context, string) *Patient) http.HandlerFunc {
 	}
 }
 
+// DeleteByIDHandler is handler for delete patient by id
+func DeleteByIDHandler(repo func(context.Context, string) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		err := repo(context.Background(), vars["patientID"])
+		if err != nil {
+			response.BadRequest(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(http.StatusOK)
+	}
+}
+
+// ByHospital is handler for retrive all patient by hospital id
 func ByHospital(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -61,6 +79,7 @@ func ByHospital(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	}
 }
 
+// Update is handler for update patient data by id
 func Update(repo func(context.Context, string, PatientRequest) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var p PatientRequest
@@ -82,6 +101,7 @@ func Update(repo func(context.Context, string, PatientRequest) error) http.Handl
 	}
 }
 
+// LogByIDHandler is handler for update patient data by id
 func LogByIDHandler(repo func(context.Context, string) []PatientLog) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
