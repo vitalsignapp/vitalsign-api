@@ -204,6 +204,28 @@ func NewUpdateStatus(fs *firestore.Client) func(context.Context, string, string,
 	}
 }
 
+func AddNewRepository(fs *firestore.Client) func(context.Context, PatientRequest) error {
+	return func(ctx context.Context, p PatientRequest) error {
+		_, _, err := fs.Collection("patientData").Add(ctx, map[string]interface{}{
+			"dateOfAdmit":    p.DateOfAdmit,
+			"dateOfBirth":    p.DateOfBirth,
+			"diagnosis":      p.Diagnosis,
+			"hospitalKey":    p.HospitalKey,
+			"isRead":         p.IsRead,
+			"isShowNotify":   p.IsShowNotify,
+			"name":           p.Name,
+			"patientRoomKey": p.PatientRoomKey,
+			"sex":            p.Sex,
+			"surname":        p.Surname,
+			"username":       p.Username,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func toPatient(p PatientData, ID string) Patient {
 	return Patient{
 		ID:             ID,

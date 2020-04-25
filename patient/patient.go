@@ -16,6 +16,7 @@ type PatientRequest struct {
 	DateOfAdmit    string `json:"dateOfAdmit"`
 	DateOfBirth    string `json:"dateOfBirth"`
 	Diagnosis      string `json:"diagnosis"`
+	HospitalKey    string `json:"hospitalKey"`
 	IsRead         bool   `json:"isRead"`
 	IsShowNotify   bool   `json:"isShowNotify"`
 	Name           string `json:"name"`
@@ -95,11 +96,6 @@ func LogByIDHandler(repo func(context.Context, string) []PatientLog) http.Handle
 func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (auth.TokenParseValue, error), repo func(context.Context, string, string, PatientStatusRequest) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenParse, err := parseToken(w, r)
-
-		if err != nil {
-			response.BadRequest(w, err)
-			return
-		}
 		hospitalKey := tokenParse.HospitalKey
 
 		var p PatientStatusRequest
@@ -119,6 +115,25 @@ func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (au
 
 		if err != nil {
 			response.BadRequest(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(http.StatusOK)
+	}
+}
+
+func Create(repo func(context.Context, PatientRequest) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var p PatientRequest
+		err := json.NewDecoder(r.Body).Decode(&p)
+		if err != nil {
+			response.BadRequest(w, err)
+			return
+		}
+
+		err = repo(context.Background(), p)
+		if err != nil {
+			response.InternalServerError(w, err)
 			return
 		}
 

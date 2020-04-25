@@ -300,6 +300,81 @@ func TestUpdatePatientStatus(t *testing.T) {
 	})
 }
 
+func TestAddNewPatient(t *testing.T) {
+	t.Run("it should return httpCode 200 when add new patient success", func(t *testing.T) {
+		body := `
+		{
+			"dateOfAdmit": "25/04/2020",
+			"dateOfBirth": "25/04/2000",
+			"diagnosis": "diagnosis test",
+			"hospitalKey": "7yfcpkXkME2OrvbYNAq1",
+			"isRead": true,
+			"isShowNotify": true,
+			"name": "ผู้ป่วย",
+			"patientRoomKey": "xgsqZBm6SYERhlgYgoLa",
+			"sex": "male",
+			"surname": "นามสมมุต",
+			"username": "900100"
+			}
+		`
+		req, err := http.NewRequest(http.MethodPost, "/patient", strings.NewReader(body))
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(Create(mockAddNewRepositorySuccess))
+		handler.ServeHTTP(resp, req)
+
+		if status := resp.Code; status != http.StatusOK {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
+		}
+	})
+
+	t.Run("it should return httpCode 500 when create patient fail", func(t *testing.T) {
+		body := `
+		{
+			"dateOfAdmit": "25/04/2020",
+			"dateOfBirth": "25/04/2000",
+			"diagnosis": "diagnosis test",
+			"hospitalKey": "7yfcpkXkME2OrvbYNAq1",
+			"isRead": true,
+			"isShowNotify": true,
+			"name": "ผู้ป่วย",
+			"patientRoomKey": "xgsqZBm6SYERhlgYgoLa",
+			"sex": "male",
+			"surname": "นามสมมุต",
+			"username": "900100"
+			}
+		`
+		req, err := http.NewRequest(http.MethodPost, "/patient", strings.NewReader(body))
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(Create(mockAddNewRepositoryFail))
+		handler.ServeHTTP(resp, req)
+
+		if status := resp.Code; status != http.StatusInternalServerError {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusInternalServerError)
+		}
+	})
+
+	t.Run("it should return httpCode 400 when body request is empty", func(t *testing.T) {
+		body := ``
+		req, err := http.NewRequest(http.MethodPost, "/patient", strings.NewReader(body))
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(Create(mockAddNewRepositoryFail))
+		handler.ServeHTTP(resp, req)
+
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+}
+
 func mockParseTokenError(w http.ResponseWriter, r *http.Request) (auth.TokenParseValue, error) {
 	return auth.TokenParseValue{}, errors.New("Error")
 }
@@ -496,4 +571,12 @@ func mockPatientsByHospital(context.Context, string) []Patient {
 func mockEmptyPatientsByHospital(context.Context, string) []Patient {
 	mockPatients := []Patient{}
 	return mockPatients
+}
+
+func mockAddNewRepositorySuccess(context.Context, PatientRequest) error {
+	return nil
+}
+
+func mockAddNewRepositoryFail(context.Context, PatientRequest) error {
+	return errors.New("something error")
 }
