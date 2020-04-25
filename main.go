@@ -75,7 +75,7 @@ func main() {
 			w.Header().Set("X-XSS-Protection", "1; mode=block")
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("Strict-Transport-Security", "max-age=604800; includeSubDomains; preload")
-			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,HEAD")
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH,HEAD")
 			handler.ServeHTTP(w, r)
 		})
 	})
@@ -108,6 +108,7 @@ func main() {
 
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 	secure.HandleFunc("/patient/{patientID}", patient.Update(patient.UpdateRepo(fsClient))).Methods(http.MethodPut)
+	secure.HandleFunc("/patient/{patientID}/status", patient.UpdatePatientStatus(auth.ParseToken, patient.NewUpdateStatus(fsClient))).Methods(http.MethodPatch, http.MethodOptions)
 	secure.HandleFunc("/patient/{patientID}", patient.ByIDHandler(patient.NewRepoByID(fsClient)))
 	secure.HandleFunc("/patient/hospital/{hospitalID}", patient.ByHospital(patient.NewRepoByHospital(fsClient)))
 	secure.HandleFunc("/patient/{patientID}/log", patient.LogByIDHandler(patient.NewRepoLogByID(fsClient)))

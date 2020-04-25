@@ -3,9 +3,13 @@ package patient
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/vitalsignapp/vitalsign-api/auth"
 )
 
 func TestPatientByRoomKeyHandler(t *testing.T) {
@@ -226,6 +230,112 @@ func TestPatientsByHospital(t *testing.T) {
 			t.Errorf("Length of res isn't 0 but got %d", len(res))
 		}
 	})
+}
+
+func TestUpdatePatientStatus(t *testing.T) {
+	t.Run("should return status 200 when call POST /patient/{patientID}/status", func(t *testing.T) {
+		body := `{
+			"isRead": true,
+			"isNotify": false
+		}`
+		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(UpdatePatientStatus(mockParseToken, mockUpdateStatusRequest))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusOK {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
+		}
+	})
+
+	t.Run("should return status 400 when call POST /patient/{patientID}/status and body does not set field isRead", func(t *testing.T) {
+		body := `{
+			"isNotify": false
+		}`
+		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(UpdatePatientStatus(mockParseToken, mockUpdateStatusRequest))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("should return status 400 when call POST /patient/{patientID}/status and body does not set field isNotify", func(t *testing.T) {
+		body := `{
+			"isRead": false
+		}`
+		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(UpdatePatientStatus(mockParseToken, mockUpdateStatusRequest))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("should return status 400 when call POST /patient/{patientID}/status and body is incorrect", func(t *testing.T) {
+		body := `[]`
+		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(UpdatePatientStatus(mockParseToken, mockUpdateStatusRequest))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("should return status 400 when call POST /patient/{patientID}/status and body is incorrect", func(t *testing.T) {
+		body := `{
+			"isRead": true,
+			"isNotify": false
+		}`
+		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(UpdatePatientStatus(mockParseToken, mockUpdateStatusRequestError))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+}
+
+func mockParseTokenError(w http.ResponseWriter, r *http.Request) (auth.TokenParseValue, error) {
+	return auth.TokenParseValue{}, errors.New("Error")
+}
+
+func mockParseToken(w http.ResponseWriter, r *http.Request) (auth.TokenParseValue, error) {
+	return auth.TokenParseValue{
+		Email:       "email@email.com",
+		HospitalKey: "123",
+	}, nil
+}
+
+func mockUpdateStatusRequest(context.Context, string, string, PatientStatusRequest) error {
+	return nil
+}
+
+func mockUpdateStatusRequestError(context.Context, string, string, PatientStatusRequest) error {
+	return errors.New("Error")
 }
 
 func mockPatients(context.Context, string) []Patient {

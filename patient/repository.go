@@ -2,6 +2,7 @@ package patient
 
 import (
 	"context"
+	"errors"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
@@ -19,6 +20,10 @@ type Patient struct {
 	Sex            string `json:"sex"`
 	Surname        string `json:"surname"`
 	PatientRoomKey string `json:"patientRoomKey"`
+}
+
+type PatientPartial struct {
+	HospitalKey string `json:"hospitalKey"`
 }
 
 type PatientData struct {
@@ -165,6 +170,30 @@ func NewRepoLogByID(fs *firestore.Client) func(context.Context, string) []Patien
 		}
 
 		return pats
+	}
+}
+
+// NewUpdateStatus NewUpdateStatus
+func NewUpdateStatus(fs *firestore.Client) func(context.Context, string, string, PatientStatusRequest) error {
+	return func(ctx context.Context, hospitalID string, patientID string, p PatientStatusRequest) error {
+		dsnap, err := fs.Collection("patientData").Doc(patientID).Get(ctx)
+		if err != nil {
+			return err
+		}
+		var patient PatientPartial
+		dsnap.DataTo(&patient)
+		if hospitalID != patient.HospitalKey {
+			return errors.New("Patient does not in this hospital")
+		}
+
+		_, err = fs.Collection("patientData").Doc(patientID).Set(ctx, map[string]interface{}{
+			"isRead":   p.IsRead,
+			"isNotify": p.IsNotify,
+		}, firestore.MergeAll)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 }
 
