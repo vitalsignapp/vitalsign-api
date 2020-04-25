@@ -193,7 +193,7 @@ func NewUpdateStatus(fs *firestore.Client) func(context.Context, string, string,
 		}
 
 		if p.IsNotify != nil {
-			data["isNotify"] = p.IsNotify
+			data["isShowNotify"] = p.IsNotify
 		}
 
 		_, err = fs.Collection("patientData").Doc(patientID).Set(ctx, data, firestore.MergeAll)
