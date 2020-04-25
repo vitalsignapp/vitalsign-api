@@ -402,6 +402,35 @@ func TestDeletePatient(t *testing.T) {
 		}
 	})
 }
+
+func TestDeletePatientLog(t *testing.T) {
+	t.Run("should return status 200 when call DELETE /patient/{patientLogID}/log", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, "/patient/1/log", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(DeleteLogByIDHandler(mockDeleteSuccess))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusOK {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
+		}
+	})
+
+	t.Run("should return status 400 when call DELETE /patient/{patientLogID}/log", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, "/patient/2/log", nil)
+		if err != nil {
+			t.Error(err)
+		}
+		resp := httptest.NewRecorder()
+		handler := http.HandlerFunc(DeleteLogByIDHandler(mockDeleteError))
+		handler.ServeHTTP(resp, req)
+		if status := resp.Code; status != http.StatusBadRequest {
+			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+}
+
 func mockDeleteSuccess(context.Context, string) error {
 	return nil
 }

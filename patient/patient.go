@@ -112,6 +112,21 @@ func LogByIDHandler(repo func(context.Context, string) []PatientLog) http.Handle
 	}
 }
 
+// DeleteLogByIDHandler is handler for delete patient log by id
+func DeleteLogByIDHandler(repo func(context.Context, string) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		err := repo(context.Background(), vars["patientLogID"])
+		if err != nil {
+			response.BadRequest(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(http.StatusOK)
+	}
+}
+
 // UpdatePatientStatus UpdatePatientStatus
 func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (auth.TokenParseValue, error), repo func(context.Context, string, string, PatientStatusRequest) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

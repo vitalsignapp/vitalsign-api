@@ -242,6 +242,17 @@ func NewRepoDeleteByID(fs *firestore.Client) func(context.Context, string) error
 	}
 }
 
+// NewRepoDeleteLogByID NewRepoDeleteLogByID
+func NewRepoDeleteLogByID(fs *firestore.Client) func(context.Context, string) error {
+	return func(ctx context.Context, patientLogID string) error {
+		_, err := fs.Collection("patientLog").Doc(patientLogID).Delete(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func toPatient(p PatientData, ID string) Patient {
 	return Patient{
 		ID:             ID,
