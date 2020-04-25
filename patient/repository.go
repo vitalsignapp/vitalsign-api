@@ -187,8 +187,8 @@ func NewUpdateStatus(fs *firestore.Client) func(context.Context, string, string,
 		}
 
 		_, err = fs.Collection("patientData").Doc(patientID).Set(ctx, map[string]interface{}{
-			"isRead":   p.IsRead,
-			"isNotify": p.IsNotify,
+			"isRead":       p.IsRead,
+			"isShowNotify": p.IsNotify,
 		}, firestore.MergeAll)
 		if err != nil {
 			return err
