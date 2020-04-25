@@ -109,13 +109,8 @@ func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (au
 			return
 		}
 
-		if p.IsRead == nil {
-			response.BadRequest(w, errors.New("isRead is required"))
-			return
-		}
-
-		if p.IsNotify == nil {
-			response.BadRequest(w, errors.New("isNotify is required"))
+		if p.IsRead == nil && p.IsNotify == nil {
+			response.BadRequest(w, errors.New("isRead of isNotify is required"))
 			return
 		}
 

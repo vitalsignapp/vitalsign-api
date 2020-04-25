@@ -251,27 +251,8 @@ func TestUpdatePatientStatus(t *testing.T) {
 		}
 	})
 
-	t.Run("should return status 400 when call POST /patient/{patientID}/status and body does not set field isRead", func(t *testing.T) {
-		body := `{
-			"isNotify": false
-		}`
-		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
-		if err != nil {
-			t.Error(err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(UpdatePatientStatus(mockParseToken, mockUpdateStatusRequest))
-		handler.ServeHTTP(resp, req)
-		if status := resp.Code; status != http.StatusBadRequest {
-			t.Errorf("wrong code: got %v want %v", status, http.StatusBadRequest)
-		}
-	})
-
-	t.Run("should return status 400 when call POST /patient/{patientID}/status and body does not set field isNotify", func(t *testing.T) {
-		body := `{
-			"isRead": false
-		}`
+	t.Run("should return status 400 when call POST /patient/{patientID}/status and body does not set field isRead and isNotify", func(t *testing.T) {
+		body := `{}`
 		req, err := http.NewRequest(http.MethodPatch, "/patient/123/status", strings.NewReader((body)))
 		if err != nil {
 			t.Error(err)

@@ -186,10 +186,17 @@ func NewUpdateStatus(fs *firestore.Client) func(context.Context, string, string,
 			return errors.New("Patient does not in this hospital")
 		}
 
-		_, err = fs.Collection("patientData").Doc(patientID).Set(ctx, map[string]interface{}{
-			"isRead":       p.IsRead,
-			"isShowNotify": p.IsNotify,
-		}, firestore.MergeAll)
+		var data = map[string]interface{}{}
+
+		if p.IsRead != nil {
+			data["isRead"] = p.IsRead
+		}
+
+		if p.IsNotify != nil {
+			data["isNotify"] = p.IsNotify
+		}
+
+		_, err = fs.Collection("patientData").Doc(patientID).Set(ctx, data, firestore.MergeAll)
 		if err != nil {
 			return err
 		}
