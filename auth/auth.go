@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -26,6 +27,12 @@ type LoginResponse struct {
 	Name             string `json:"name"`
 	Surname          string `json:"surname"`
 	UserID           string `json:"userId"`
+}
+
+// ParseToken ParseToken
+type TokenParseValue struct {
+	Email       string `json:"email"`
+	HospitalKey string `json:"hospitalKey"`
 }
 
 func Authen(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +60,25 @@ func GenerateToken(payload map[string]interface{}, expireAt time.Time) (string, 
 	}
 
 	return token.SignedString([]byte(hmacSecret))
+}
+
+func ParseToken(w http.ResponseWriter, r *http.Request) (TokenParseValue, error) {
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer")
+	reqToken = strings.TrimSpace(splitToken[1])
+	claims := jwt.MapClaims{}
+
+	_, err := jwt.ParseWithClaims(reqToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(hmacSecret), nil
+	})
+	if err != nil {
+		return TokenParseValue{}, err
+	}
+
+	return TokenParseValue{
+		Email:       claims["email"].(string),
+		HospitalKey: claims["hospitalKey"].(string),
+	}, nil
 }
 
 func Login(repo func(context.Context, string, string, string) *LoginResponse) http.HandlerFunc {

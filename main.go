@@ -20,6 +20,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/vitalsignapp/vitalsign-api/auth"
+	"github.com/vitalsignapp/vitalsign-api/hospital"
 	"github.com/vitalsignapp/vitalsign-api/patient"
 	"github.com/vitalsignapp/vitalsign-api/sse"
 	"github.com/vitalsignapp/vitalsign-api/user"
@@ -114,6 +115,8 @@ func main() {
 	secure.HandleFunc("/ward", ward.NewRoom(ward.AddNewRepository(fsClient))).Methods(http.MethodPost)
 	secure.HandleFunc("/ward/{hospitalKey}", ward.Rooms(ward.NewRepository(fsClient)))
 	secure.HandleFunc("/ward/{patientRoomKey}/patients", patient.ByRoomKeyHandler(patient.NewRepoByRoomKey(fsClient)))
+
+	secure.HandleFunc("/hospital", hospital.UpdateHospitalConfig(auth.ParseToken, hospital.NewUpdateConfigPatient(fsClient))).Methods(http.MethodPost, http.MethodOptions)
 
 	secure.HandleFunc("/userData/reset/{userID}", user.ChangePassword(user.NewChangePassword(fsClient))).Methods(http.MethodPut, http.MethodOptions)
 

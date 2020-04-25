@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"cloud.google.com/go/firestore"
 )
@@ -19,7 +18,6 @@ type User struct {
 // NewChangePassword NewChangePassword
 func NewChangePassword(fs *firestore.Client) func(context.Context, string, string) error {
 	return func(ctx context.Context, userID string, password string) error {
-		fmt.Println(userID)
 		_, err := fs.Collection("userData").Doc(userID).Get(ctx)
 		if err != nil {
 			return err
