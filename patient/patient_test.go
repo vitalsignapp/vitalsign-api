@@ -387,8 +387,8 @@ func TestDeletePatient(t *testing.T) {
 		if status := resp.Code; status != http.StatusOK {
 			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
 		}
-	});
-	
+	})
+
 	t.Run("should return status 400 when call DELETE /patient", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodDelete, "/patient", nil)
 		if err != nil {
