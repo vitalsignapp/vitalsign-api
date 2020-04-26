@@ -137,8 +137,21 @@ func NewRepoByHospital(fs *firestore.Client) func(context.Context, string) []Pat
 
 // UpdateRepo update patient data by patient id
 func UpdateRepo(fs *firestore.Client) func(context.Context, string, PatientRequest) error {
-	return func(ctx context.Context, patientID string, pt PatientRequest) error {
-		_, err := fs.Collection("patientData").Doc(patientID).Set(ctx, pt)
+	return func(ctx context.Context, patientID string, p PatientRequest) error {
+		_, err := fs.Collection("patientData").Doc(patientID).Set(ctx,
+			map[string]interface{}{
+				"dateOfAdmit":    p.DateOfAdmit,
+				"dateOfBirth":    p.DateOfBirth,
+				"diagnosis":      p.Diagnosis,
+				"hospitalKey":    p.HospitalKey,
+				"isRead":         p.IsRead,
+				"isShowNotify":   p.IsShowNotify,
+				"name":           p.Name,
+				"patientRoomKey": p.PatientRoomKey,
+				"sex":            p.Sex,
+				"surname":        p.Surname,
+				"username":       p.Username,
+			}, firestore.MergeAll)
 		if err != nil {
 			return err
 		}

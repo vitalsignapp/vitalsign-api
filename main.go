@@ -108,8 +108,8 @@ func main() {
 
 	secure.HandleFunc("/patient/scheduler/{patientID}", patient.NewScheduler(fsClient))
 	secure.HandleFunc("/patient", patient.Create(patient.AddNewRepository(fsClient))).Methods(http.MethodPost)
-	secure.HandleFunc("/patient/{patientID}", patient.DeleteByIDHandler(patient.NewRepoDeleteByID(fsClient))).Methods(http.MethodDelete)
 	secure.HandleFunc("/patient/{patientID}", patient.Update(patient.UpdateRepo(fsClient))).Methods(http.MethodPut)
+	secure.HandleFunc("/patient/{patientID}", patient.DeleteByIDHandler(patient.NewRepoDeleteByID(fsClient))).Methods(http.MethodDelete)
 	secure.HandleFunc("/patient/{patientID}/status", patient.UpdatePatientStatus(auth.ParseToken, patient.NewUpdateStatus(fsClient))).Methods(http.MethodPatch, http.MethodOptions)
 	secure.HandleFunc("/patient/{patientID}", patient.ByIDHandler(patient.NewRepoByID(fsClient)))
 	secure.HandleFunc("/patient/{patientLogID}/log", patient.DeleteLogByIDHandler(patient.NewRepoDeleteLogByID(fsClient))).Methods(http.MethodDelete)
