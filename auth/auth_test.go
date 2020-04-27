@@ -102,8 +102,8 @@ func TestLogout(t *testing.T) {
 			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
 		}
 
-		if cookie := resp.Header().Get("Set-Cookie"); cookie != "access-token=; Path=/" {
-			t.Errorf("wrong code: got %v want %v", cookie, "access-token=; Path=/")
+		if cookie := resp.Header().Get("Set-Cookie"); cookie != "access-token=; Path=/; Max-Age=0" {
+			t.Errorf("wrong code: got %v want %v", cookie, "access-token=; Path=/; Max-Age=0")
 		}
 	})
 }
