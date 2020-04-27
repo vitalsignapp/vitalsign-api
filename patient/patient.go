@@ -16,6 +16,7 @@ type PatientRequest struct {
 	DateOfAdmit    string `json:"dateOfAdmit"`
 	DateOfBirth    string `json:"dateOfBirth"`
 	Diagnosis      string `json:"diagnosis"`
+	HospitalKey    string `json:"hospitalKey"`
 	IsRead         bool   `json:"isRead"`
 	IsShowNotify   bool   `json:"isShowNotify"`
 	Name           string `json:"name"`
@@ -30,6 +31,7 @@ type PatientStatusRequest struct {
 	IsNotify *bool `json:"isNotify"`
 }
 
+// ByRoomKeyHandler is handler for get patient by room id
 func ByRoomKeyHandler(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -40,6 +42,7 @@ func ByRoomKeyHandler(repo func(context.Context, string) []Patient) http.Handler
 	}
 }
 
+// ByIDHandler is handler for get patient by id
 func ByIDHandler(repo func(context.Context, string) *Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -50,6 +53,22 @@ func ByIDHandler(repo func(context.Context, string) *Patient) http.HandlerFunc {
 	}
 }
 
+// DeleteByIDHandler is handler for delete patient by id
+func DeleteByIDHandler(repo func(context.Context, string) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		err := repo(context.Background(), vars["patientID"])
+		if err != nil {
+			response.BadRequest(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(http.StatusOK)
+	}
+}
+
+// ByHospital is handler for retrive all patient by hospital id
 func ByHospital(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -60,6 +79,7 @@ func ByHospital(repo func(context.Context, string) []Patient) http.HandlerFunc {
 	}
 }
 
+// Update is handler for update patient data by id
 func Update(repo func(context.Context, string, PatientRequest) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var p PatientRequest
@@ -81,6 +101,7 @@ func Update(repo func(context.Context, string, PatientRequest) error) http.Handl
 	}
 }
 
+// LogByIDHandler is handler for update patient data by id
 func LogByIDHandler(repo func(context.Context, string) []PatientLog) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -91,15 +112,25 @@ func LogByIDHandler(repo func(context.Context, string) []PatientLog) http.Handle
 	}
 }
 
-// UpdatePatientStatus UpdatePatientStatus
-func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (auth.TokenParseValue, error), repo func(context.Context, string, string, PatientStatusRequest) error) http.HandlerFunc {
+// DeleteLogByIDHandler is handler for delete patient log by id
+func DeleteLogByIDHandler(repo func(context.Context, string) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tokenParse, err := parseToken(w, r)
+		vars := mux.Vars(r)
 
+		err := repo(context.Background(), vars["patientLogID"])
 		if err != nil {
 			response.BadRequest(w, err)
 			return
 		}
+
+		json.NewEncoder(w).Encode(http.StatusOK)
+	}
+}
+
+// UpdatePatientStatus UpdatePatientStatus
+func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (auth.TokenParseValue, error), repo func(context.Context, string, string, PatientStatusRequest) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenParse, err := parseToken(w, r)
 		hospitalKey := tokenParse.HospitalKey
 
 		var p PatientStatusRequest
@@ -119,6 +150,25 @@ func UpdatePatientStatus(parseToken func(http.ResponseWriter, *http.Request) (au
 
 		if err != nil {
 			response.BadRequest(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(http.StatusOK)
+	}
+}
+
+func Create(repo func(context.Context, PatientRequest) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var p PatientRequest
+		err := json.NewDecoder(r.Body).Decode(&p)
+		if err != nil {
+			response.BadRequest(w, err)
+			return
+		}
+
+		err = repo(context.Background(), p)
+		if err != nil {
+			response.InternalServerError(w, err)
 			return
 		}
 
