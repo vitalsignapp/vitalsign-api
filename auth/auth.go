@@ -125,10 +125,13 @@ func Login(repo func(context.Context, string, string, string) *LoginResponse) ht
 func Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie := &http.Cookie{
-			Name:  "access-token",
-			Value: "",
-			Path:  "/",
+			Name:   "access-token",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
 		}
 		http.SetCookie(w, cookie)
+		json.NewEncoder(w).Encode(map[string]interface{}{})
+		return
 	}
 }

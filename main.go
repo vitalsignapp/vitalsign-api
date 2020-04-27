@@ -76,6 +76,7 @@ func main() {
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("Strict-Transport-Security", "max-age=604800; includeSubDomains; preload")
 			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH,HEAD")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			handler.ServeHTTP(w, r)
 		})
 	})
@@ -170,7 +171,7 @@ func initConfig() {
 	viper.SetDefault("port", "1323")
 	viper.SetDefault("sse.port", "1324")
 
-	viper.SetDefault("cors.allow_origin", "*")
+	viper.SetDefault("cors.allow_origin", "http://localhost:8080")
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
