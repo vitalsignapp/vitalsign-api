@@ -109,9 +109,10 @@ func Login(repo func(context.Context, string, string, string) *LoginResponse) ht
 		}
 
 		cookie := &http.Cookie{
-			Name:  "access-token",
-			Value: token,
-			Path:  "/",
+			Name:   "access-token",
+			Value:  token,
+			Domain: ".vitalsignapp.com",
+			Path:   "/",
 		}
 		http.SetCookie(w, cookie)
 		json.NewEncoder(w).Encode(map[string]interface{}{
