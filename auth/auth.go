@@ -129,6 +129,7 @@ func Logout() http.HandlerFunc {
 			Name:   "access-token",
 			Value:  "",
 			Path:   "/",
+			Domain: ".vitalsignapp.com",
 			MaxAge: -1,
 		}
 		http.SetCookie(w, cookie)
