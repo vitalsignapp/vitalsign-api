@@ -22,7 +22,7 @@ func TestLogin(t *testing.T) {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(Login(mockUserData))
+		handler := http.HandlerFunc(Login(mockUserData, "localhost"))
 		handler.ServeHTTP(resp, req)
 
 		if status := resp.Code; status != http.StatusOK {
@@ -47,7 +47,7 @@ func TestLogin(t *testing.T) {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(Login(mockEmptyUserData))
+		handler := http.HandlerFunc(Login(mockEmptyUserData, "localhost"))
 		handler.ServeHTTP(resp, req)
 
 		if status := resp.Code; status != http.StatusUnauthorized {
@@ -61,7 +61,7 @@ func TestLogin(t *testing.T) {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(Login(mockEmptyUserData))
+		handler := http.HandlerFunc(Login(mockEmptyUserData, "localhost"))
 		handler.ServeHTTP(resp, req)
 
 		if status := resp.Code; status != http.StatusBadRequest {
@@ -95,14 +95,14 @@ func TestLogout(t *testing.T) {
 			t.Error(err)
 		}
 		resp := httptest.NewRecorder()
-		handler := http.HandlerFunc(Logout())
+		handler := http.HandlerFunc(Logout("localhost"))
 		handler.ServeHTTP(resp, req)
 
 		if status := resp.Code; status != http.StatusOK {
 			t.Errorf("wrong code: got %v want %v", status, http.StatusOK)
 		}
 
-		if cookie := resp.Header().Get("Set-Cookie"); cookie != "access-token=; Path=/; Max-Age=0" {
+		if cookie := resp.Header().Get("Set-Cookie"); cookie != "access-token=; Path=/; Domain=localhost; Max-Age=0" {
 			t.Errorf("wrong code: got %v want %v", cookie, "access-token=; Path=/; Max-Age=0")
 		}
 	})

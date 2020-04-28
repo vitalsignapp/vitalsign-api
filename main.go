@@ -93,8 +93,8 @@ func main() {
 	r.HandleFunc("/say/{uuID}", broker.SayByUUID())
 
 	r.HandleFunc("/auth", auth.Authen).Methods(http.MethodGet, http.MethodOptions)
-	r.HandleFunc("/login", auth.Login(auth.CheckAuthen(fsClient))).Methods(http.MethodPost, http.MethodOptions)
-	r.HandleFunc("/logout", auth.Logout()).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/login", auth.Login(auth.CheckAuthen(fsClient), viper.GetString("cookie_domain"))).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/logout", auth.Logout(viper.GetString("cookie_domain"))).Methods(http.MethodGet, http.MethodOptions)
 
 	r.HandleFunc("/health_check", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
@@ -175,6 +175,7 @@ func initConfig() {
 	viper.SetDefault("sse.port", "1324")
 
 	viper.SetDefault("cors.allow_origin", "http://localhost:8080")
+	viper.SetDefault("cookie_domain", ".localhost")
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

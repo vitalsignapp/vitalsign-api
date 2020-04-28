@@ -81,7 +81,7 @@ func ParseToken(w http.ResponseWriter, r *http.Request) (TokenParseValue, error)
 	}, nil
 }
 
-func Login(repo func(context.Context, string, string, string) *LoginResponse) http.HandlerFunc {
+func Login(repo func(context.Context, string, string, string) *LoginResponse, cookieDomain string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var credential Credential
 		err := json.NewDecoder(r.Body).Decode(&credential)
@@ -111,7 +111,7 @@ func Login(repo func(context.Context, string, string, string) *LoginResponse) ht
 		cookie := &http.Cookie{
 			Name:   "access-token",
 			Value:  token,
-			Domain: ".vitalsignapp.com",
+			Domain: cookieDomain,
 			Path:   "/",
 		}
 		http.SetCookie(w, cookie)
@@ -123,13 +123,13 @@ func Login(repo func(context.Context, string, string, string) *LoginResponse) ht
 	}
 }
 
-func Logout() http.HandlerFunc {
+func Logout(cookieDomain string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie := &http.Cookie{
 			Name:   "access-token",
 			Value:  "",
 			Path:   "/",
-			Domain: ".vitalsignapp.com",
+			Domain: cookieDomain,
 			MaxAge: -1,
 		}
 		http.SetCookie(w, cookie)
